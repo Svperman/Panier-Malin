@@ -1,12 +1,13 @@
-# Panier Malin — code Apps Script
+# Panier Malin — serveur de données (Apps Script)
 
-Ces deux fichiers sont le code de l'appli, hébergée par Google Apps Script
-(script lié à la Google Sheet « Panier Malin »). La racine de ce dépôt n'est que
-la coquille installable (PWA) qui affiche cette appli.
+L'appli est la page `index.html` à la racine de ce dépôt, publiée sur
+https://svperman.github.io/Panier-Malin/ — **chaque push sur `main` la met à jour** pour tout le monde.
 
-GitHub ne met **pas** l'appli à jour tout seul. Pour publier une modification :
+`Code.gs` est le seul fichier côté Google : il lit et enregistre la liste dans la Google Sheet.
+Il ne change presque jamais. S'il change :
 
-1. Dans l'éditeur Apps Script, remplacer le contenu de `Code.gs` et `Index.html`
-   par ceux de ce dossier, puis enregistrer.
+1. Dans l'éditeur Apps Script (script lié à la Sheet), remplacer `Code.gs`, puis enregistrer.
 2. **Déployer › Gérer les déploiements › crayon (Modifier) › Version : Nouvelle version › Déployer.**
-   Ne pas créer de « Nouveau déploiement » : l'URL `/exec` changerait et la coquille ne la verrait plus.
+   Ne jamais créer de « Nouveau déploiement » : l'URL `/exec` (écrite dans `index.html`) changerait.
+
+Le déploiement doit rester : *Exécuter en tant que : Moi* · *Qui peut accéder : Tout le monde*.

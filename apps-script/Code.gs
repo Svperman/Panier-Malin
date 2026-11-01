@@ -1,25 +1,61 @@
 /**
- * Panier Malin — liste de courses qui apprend la consommation.
- * Script lié à un Google Sheet : les données sont rangées dans 3 onglets
+ * Panier Malin — serveur de données (Google Apps Script).
+ * L'appli elle-même est sur GitHub Pages : https://svperman.github.io/Panier-Malin/
+ * Ce script ne fait que lire et enregistrer la liste dans le Google Sheet lié :
  *   - Produits   : un produit suivi par ligne
  *   - Ponctuels  : articles à acheter une seule fois
  *   - Réglages   : nombre de jours de rappel avant la fin
+ *
+ * Déploiement : Application Web, « Exécuter en tant que : Moi », « Qui peut accéder : Tout le monde ».
+ * Après une modification : Déployer › Gérer les déploiements › crayon › Nouvelle version
+ * (jamais « Nouveau déploiement », sinon l'URL /exec change).
  */
 
 var SHEET_PRODUITS = 'Produits';
 var SHEET_PONCTUELS = 'Ponctuels';
 var SHEET_REGLAGES = 'Réglages';
+var APP_URL = 'https://svperman.github.io/Panier-Malin/';
 
 var HEAD_PRODUITS = ['id', 'Produit', 'Catégorie', 'Durée d\'un paquet (jours)', 'Durée de départ (jours)',
   'Contenu du paquet', 'Unité', 'Dernier achat', 'Ajouté à la main', 'Fini le', 'Durées réelles (jours)'];
 var HEAD_PONCTUELS = ['id', 'Article'];
 
-/** Ouvre l'appli web. */
-function doGet() {
-  return HtmlService.createHtmlOutputFromFile('Index')
+/**
+ * Lecture : ?action=state renvoie la liste en JSON.
+ * Sans paramètre : l'ancienne page Index (si elle est encore dans le projet), sinon un lien vers l'appli.
+ */
+function doGet(e) {
+  var action = e && e.parameter ? e.parameter.action : '';
+  if (action === 'state') return json_({ ok: true, state: JSON.parse(getState()) });
+  try {
+    return HtmlService.createHtmlOutputFromFile('Index')
+      .setTitle('Panier Malin')
+      .addMetaTag('viewport', 'width=device-width, initial-scale=1, viewport-fit=cover')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+  } catch (err) { /* pas de fichier Index : on renvoie vers l'appli GitHub */ }
+  return HtmlService.createHtmlOutput(
+    '<p style="font-family:system-ui,sans-serif;font-size:16px;padding:16px">Panier Malin s\'ouvre ici : ' +
+    '<a href="' + APP_URL + '" target="_top">' + APP_URL + '</a></p>')
     .setTitle('Panier Malin')
-    .addMetaTag('viewport', 'width=device-width, initial-scale=1, viewport-fit=cover')
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+/** Écriture : l'appli envoie tout l'état en JSON (corps texte brut). */
+function doPost(e) {
+  try {
+    var body = e && e.postData ? e.postData.contents : '';
+    var s = JSON.parse(body);
+    if (!s || !Array.isArray(s.products)) throw new Error('Données invalides');
+    saveState(body);
+    return json_({ ok: true });
+  } catch (err) {
+    return json_({ ok: false, error: String(err && err.message ? err.message : err) });
+  }
+}
+
+function json_(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
 }
 
 /** Crée les onglets si besoin (lancer une fois à la main pour autoriser le script). */
