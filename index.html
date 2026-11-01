@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Panier Malin</title>
+<meta name="theme-color" content="#1f6f54">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Panier Malin">
+<meta name="robots" content="noindex">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+  :root{--vert:#1f6f54;--fond:#f4f7f5;--texte:#16302a;--doux:#5d7169}
+  @media (prefers-color-scheme:dark){:root{--fond:#121a17;--texte:#e6efeb;--doux:#9fb3ab}}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--fond);color:var(--texte);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  body{padding-top:env(safe-area-inset-top,0px)}
+  #app{position:fixed;left:0;right:0;bottom:0;top:env(safe-area-inset-top,0px);width:100%;height:calc(100% - env(safe-area-inset-top,0px));border:0;background:var(--fond)}
+  .ecran{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center;background:var(--fond);z-index:2;transition:opacity .3s}
+  .ecran img{width:84px;height:84px;border-radius:20px}
+  .ecran h1{margin:0;font-size:1.3rem}
+  .ecran p{margin:0;color:var(--doux);max-width:300px;line-height:1.45}
+  .barre{width:120px;height:4px;border-radius:4px;background:color-mix(in srgb,var(--vert) 20%,transparent);overflow:hidden}
+  .barre::after{content:"";display:block;width:40%;height:100%;background:var(--vert);border-radius:4px;animation:glisse 1.1s ease-in-out infinite}
+  @keyframes glisse{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
+  @media (prefers-reduced-motion:reduce){.barre::after{animation:none;width:100%}}
+  button{font:inherit;font-weight:600;border:0;border-radius:999px;padding:10px 20px;background:var(--vert);color:#fff;cursor:pointer}
+  [hidden]{display:none!important}
+  .cache{opacity:0;pointer-events:none}
+</style>
+</head>
+<body>
+  <div class="ecran" id="chargement">
+    <img src="icon-192.png" alt="">
+    <h1>Panier Malin</h1>
+    <div class="barre" aria-label="Chargement"></div>
+  </div>
+
+  <div class="ecran" id="horsLigne" hidden>
+    <img src="icon-192.png" alt="">
+    <h1>Pas de connexion</h1>
+    <p>La liste est enregistrée dans Google Sheets : il faut Internet pour l'afficher et la modifier.</p>
+    <button id="reessayer">Réessayer</button>
+  </div>
+
+  <iframe id="app" title="Panier Malin" allow="clipboard-write"></iframe>
+
+<script>
+  // ← URL /exec de l'appli Apps Script (Déployer › Gérer les déploiements)
+  var APP_URL = "COLLER_ICI_L_URL_EXEC";
+
+  var frame = document.getElementById("app");
+  var chargement = document.getElementById("chargement");
+  var horsLigne = document.getElementById("horsLigne");
+  var minuteur = null;
+
+  function masquerChargement() {
+    clearTimeout(minuteur);
+    chargement.classList.add("cache");
+    setTimeout(function () { chargement.hidden = true; }, 300);
+  }
+
+  function ouvrir() {
+    if (!navigator.onLine) {
+      chargement.hidden = true;
+      horsLigne.hidden = false;
+      return;
+    }
+    horsLigne.hidden = true;
+    chargement.hidden = false;
+    chargement.classList.remove("cache");
+    frame.src = APP_URL;
+    // Filet de sécurité : on retire l'écran de chargement même si l'événement load tarde
+    minuteur = setTimeout(masquerChargement, 12000);
+  }
+
+  frame.addEventListener("load", function () {
+    if (frame.src && frame.src !== "about:blank") masquerChargement();
+  });
+  document.getElementById("reessayer").addEventListener("click", ouvrir);
+  window.addEventListener("online", function () { if (!horsLigne.hidden) ouvrir(); });
+
+  ouvrir();
+
+  if ("serviceWorker" in navigator && location.protocol === "https:") {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("sw.js").catch(function () {});
+    });
+  }
+</script>
+</body>
+</html>
