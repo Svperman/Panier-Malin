@@ -1,7 +1,7 @@
-// Panier Malin — service worker de la coquille installable.
-// Il garde la coquille (page, icônes) pour qu'elle s'ouvre même sans réseau ;
-// la liste elle-même vient toujours de Google Apps Script.
-const VERSION = 'panier-v1';
+// Panier Malin — service worker de l'appli installable.
+// Il garde l'appli (page, icônes) pour qu'elle s'ouvre même sans réseau ;
+// la liste vient de la Google Sheet (copie locale si hors ligne).
+const VERSION = 'panier-v2';
 const FICHIERS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png',
   './icon-maskable-512.png', './apple-touch-icon.png'];
 
